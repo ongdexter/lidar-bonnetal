@@ -152,3 +152,24 @@ class User():
         path = os.path.join(self.logdir, "sequences",
                             path_seq, "predictions", path_name)
         pred_np.tofile(path)
+
+  def convert_to_onnx(self):
+    # switch to evaluate mode
+    self.model.eval()
+
+    # empty the cache to infer in high res
+    if self.gpu:
+      torch.cuda.empty_cache()
+
+    with torch.no_grad():
+
+      # create placeholder input for tracing // [ batch size, no. of inputs, rows, cols ]
+      dummy_input = torch.randn(1, 5, 64, 512).float().cuda()
+
+      # trace and export the model
+      torch.onnx.export(self.model,
+                        dummy_input,
+                        "model.onnx")
+
+      # export done
+      print("Exported onnx model! Exiting.")
