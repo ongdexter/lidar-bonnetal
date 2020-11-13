@@ -153,6 +153,39 @@ class User():
                             path_seq, "predictions", path_name)
         pred_np.tofile(path)
 
+class ExportUser():
+  def __init__(self, ARCH, DATA, modeldir):
+    # parameters
+    self.ARCH = ARCH
+    self.DATA = DATA
+    self.modeldir = modeldir
+
+    # get the data
+    parserModule = imp.load_source("parserModule",
+                                   booger.TRAIN_PATH + '/tasks/semantic/dataset/' +
+                                   self.DATA["name"] + '/parser.py')
+    self.parser = parserModule.ExportParser(labels=self.DATA["labels"],
+                                      color_map=self.DATA["color_map"],
+                                      learning_map=self.DATA["learning_map"],
+                                      learning_map_inv=self.DATA["learning_map_inv"])
+
+    # concatenate the encoder and the head
+    with torch.no_grad():
+      self.model = Segmentator(self.ARCH,
+                               self.parser.get_n_classes(),
+                               self.modeldir)
+
+    # GPU?
+    self.gpu = False
+    self.model_single = self.model
+    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Infering in device: ", self.device)
+    if torch.cuda.is_available() and torch.cuda.device_count() > 0:
+      cudnn.benchmark = True
+      cudnn.fastest = True
+      self.gpu = True
+      self.model.cuda()
+
   def convert_to_onnx(self):
     # switch to evaluate mode
     self.model.eval()

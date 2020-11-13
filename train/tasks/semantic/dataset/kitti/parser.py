@@ -362,3 +362,24 @@ class Parser():
     label = SemanticKitti.map(label, self.learning_map_inv)
     # put label in color
     return SemanticKitti.map(label, self.color_map)
+
+class ExportParser():
+  # standard conv, BN, relu
+  def __init__(self,
+               labels,            # labels in data
+               color_map,         # color for each label
+               learning_map,      # mapping for training labels
+               learning_map_inv):  # shuffle training set?
+    super(ExportParser, self).__init__()
+
+    # if I am training, get the dataset
+    self.labels = labels
+    self.color_map = color_map
+    self.learning_map = learning_map
+    self.learning_map_inv = learning_map_inv
+
+    # number of classes that matters is the one for xentropy
+    self.nclasses = len(self.learning_map_inv)
+
+  def get_n_classes(self):
+    return self.nclasses
